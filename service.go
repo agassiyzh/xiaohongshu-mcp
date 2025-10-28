@@ -16,6 +16,7 @@ import (
 	"github.com/xpzouying/xiaohongshu-mcp/cookies"
 	"github.com/xpzouying/xiaohongshu-mcp/pkg/downloader"
 	"github.com/xpzouying/xiaohongshu-mcp/xiaohongshu"
+	"github.com/xpzouying/xiaohongshu-mcp/xiaohongshu/user_likes"
 )
 
 // XiaohongshuService 小红书业务服务
@@ -498,4 +499,57 @@ func (s *XiaohongshuService) GetMyProfile(ctx context.Context) (*UserProfileResp
 	}
 
 	return response, nil
+}
+
+// GetUserLikedFeeds 获取当前登录用户点赞的所有笔记
+func (s *XiaohongshuService) GetUserLikedFeeds(ctx context.Context) (*UserLikedFeedsResponse, error) {
+	var result *user_likes.UserLikesResponse
+	var err error
+
+	err = withBrowserPage(func(page *rod.Page) error {
+		action := user_likes.NewUserLikesAction(page)
+		result, err = action.GetUserLikedNotes(ctx)
+		return err
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// 转换为响应格式
+	response := &UserLikedFeedsResponse{
+		LikedFeeds: make([]LikedFeedInfo, len(result.LikedFeeds)),
+		Count:      result.Count,
+		HasMore:    result.HasMore,
+	}
+
+	for i, feed := range result.LikedFeeds {
+		response.LikedFeeds[i] = LikedFeedInfo{
+			FeedID:    feed.FeedID,
+			Title:     feed.Title,
+			URL:       feed.URL,
+			Author:    feed.Author,
+			AuthorID:  feed.AuthorID,
+			LikedTime: feed.LikedTime,
+		}
+	}
+
+	return response, nil
+}
+
+// UserLikedFeedsResponse 用户点赞笔记响应
+type UserLikedFeedsResponse struct {
+	LikedFeeds []LikedFeedInfo `json:"liked_feeds"`
+	Count      int             `json:"count"`
+	HasMore    bool            `json:"has_more"`
+}
+
+// LikedFeedInfo 点赞笔记信息
+type LikedFeedInfo struct {
+	FeedID    string `json:"feed_id"`
+	Title     string `json:"title"`
+	URL       string `json:"url"`
+	Author    string `json:"author"`
+	AuthorID  string `json:"author_id"`
+	LikedTime string `json:"liked_time"`
 }

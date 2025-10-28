@@ -532,3 +532,38 @@ func (s *AppServer) handlePostComment(ctx context.Context, args map[string]inter
 		}},
 	}
 }
+
+// handleGetUserLikedFeeds 处理获取用户点赞笔记
+func (s *AppServer) handleGetUserLikedFeeds(ctx context.Context) *MCPToolResult {
+	logrus.Info("MCP: 获取用户点赞笔记")
+
+	result, err := s.xiaohongshuService.GetUserLikedFeeds(ctx)
+	if err != nil {
+		return &MCPToolResult{
+			Content: []MCPContent{{
+				Type: "text",
+				Text: "获取用户点赞笔记失败: " + err.Error(),
+			}},
+			IsError: true,
+		}
+	}
+
+	// 格式化输出，转换为JSON字符串
+	jsonData, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return &MCPToolResult{
+			Content: []MCPContent{{
+				Type: "text",
+				Text: fmt.Sprintf("获取用户点赞笔记成功，但序列化失败: %v", err),
+			}},
+			IsError: true,
+		}
+	}
+
+	return &MCPToolResult{
+		Content: []MCPContent{{
+			Type: "text",
+			Text: string(jsonData),
+		}},
+	}
+}

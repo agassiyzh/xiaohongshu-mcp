@@ -241,3 +241,17 @@ func (s *AppServer) myProfileHandler(c *gin.Context) {
 	c.Set("account", "ai-report")
 	respondSuccess(c, map[string]any{"data": result}, "获取我的主页成功")
 }
+
+// getUserLikedFeedsHandler 获取用户点赞笔记
+func (s *AppServer) getUserLikedFeedsHandler(c *gin.Context) {
+	// 获取用户点赞笔记
+	result, err := s.xiaohongshuService.GetUserLikedFeeds(c.Request.Context())
+	if err != nil {
+		respondError(c, http.StatusInternalServerError, "GET_USER_LIKED_FEEDS_FAILED",
+			"获取用户点赞笔记失败", err.Error())
+		return
+	}
+
+	c.Set("account", "ai-report")
+	respondSuccess(c, result, "获取用户点赞笔记成功")
+}

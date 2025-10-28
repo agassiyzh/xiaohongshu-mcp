@@ -76,6 +76,11 @@ type FavoriteFeedArgs struct {
 	Unfavorite bool   `json:"unfavorite,omitempty" jsonschema:"是否取消收藏，true为取消收藏，false或未设置则为收藏"`
 }
 
+// GetUserLikedFeedsArgs 获取用户点赞笔记的参数
+type GetUserLikedFeedsArgs struct {
+	// 无参数，获取当前登录用户的所有点赞笔记
+}
+
 // InitMCPServer 初始化 MCP Server
 func InitMCPServer(appServer *AppServer) *mcp.Server {
 	// 创建 MCP Server
@@ -297,7 +302,19 @@ func registerTools(server *mcp.Server, appServer *AppServer) {
 		}),
 	)
 
-	logrus.Infof("Registered %d MCP tools", 11)
+	// 工具 12: 获取用户点赞笔记
+	mcp.AddTool(server,
+		&mcp.Tool{
+			Name:        "get_user_liked_feeds",
+			Description: "获取当前登录用户所有点赞的笔记列表，返回笔记标题、链接、作者等详细信息",
+		},
+		withPanicRecovery("get_user_liked_feeds", func(ctx context.Context, req *mcp.CallToolRequest, args GetUserLikedFeedsArgs) (*mcp.CallToolResult, any, error) {
+			result := appServer.handleGetUserLikedFeeds(ctx)
+			return convertToMCPResult(result), nil, nil
+		}),
+	)
+
+	logrus.Infof("Registered %d MCP tools", 12)
 }
 
 // convertToMCPResult 将自定义的 MCPToolResult 转换为官方 SDK 的格式

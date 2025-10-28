@@ -49,6 +49,7 @@ func setupRoutes(appServer *AppServer) *gin.Engine {
 		api.POST("/user/profile", appServer.userProfileHandler)
 		api.POST("/feeds/comment", appServer.postCommentHandler)
 		api.GET("/user/me", appServer.myProfileHandler)
+		api.GET("/user/liked-feeds", appServer.getUserLikedFeedsHandler)
 	}
 
 	return router
