@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-rod/rod"
 	"github.com/sirupsen/logrus"
+	"github.com/xpzouying/xiaohongshu-mcp/xiaohongshu"
 )
 
 // LikedFeed 表示用户点赞的笔记信息
@@ -70,46 +71,8 @@ func (u *UserLikesAction) GetUserLikedNotes(ctx context.Context) (*UserLikesResp
 func (u *UserLikesAction) navigateToLikesPage(page *rod.Page) error {
 	// 首先访问用户个人主页
 
-	// 1. 首先点击首页的用户按钮
-	userButton, err := page.Element(`li.user.side-bar-component a.link-wrapper`)
-	if err != nil {
-		return fmt.Errorf("failed to find user button: %w", err)
-	}
-	userButton.MustClick()
-
-	// 等待页面导航完成
-	page.MustWaitLoad()
-	page.MustWaitStable()
-	time.Sleep(2 * time.Second)
-
-	// 2. 然后点击点赞标签页
-	likesTab, err := page.Element(`div.reds-tab-item.sub-tab-list span:contains("点赞")`)
-	if err != nil {
-		// 如果直接找不到，尝试使用 JavaScript 查找
-		logrus.Info("Using JavaScript to find and click likes tab")
-		result := page.MustEval(`() => {
-				const tabs = document.querySelectorAll('div.reds-tab-item.sub-tab-list span');
-				for (const tab of tabs) {
-					if (tab.textContent === '点赞') {
-						tab.click();
-						return true;
-					}
-				}
-				return false;
-			}`).Bool()
-
-		if !result {
-			return fmt.Errorf("could not find likes tab")
-		}
-		logrus.Info("Successfully clicked likes tab using JavaScript")
-	} else {
-		likesTab.MustClick()
-		logrus.Info("Successfully clicked likes tab")
-	}
-
-	// 等待导航完成
-	page.MustWaitLoad()
-	time.Sleep(2 * time.Second)
+	navigation := xiaohongshu.NewNavigate(page)
+	navigation.ToUserLikesPage(page.GetContext())
 
 	return nil
 }
